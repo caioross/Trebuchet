@@ -24,7 +24,7 @@ class LLMEngine:
         if self._initialized:
             return
 
-        print("⚙️ [LLM] Inicializando Engine...")
+        print("[LLM] Inicializando Engine...")
         model_path = os.path.join(Config.DIRS["models"], Config.MAIN_FILE)
         
         if not os.path.exists(model_path):

@@ -1,0 +1,19 @@
+name: Build Windows Installer
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Inno Setup
+        run: choco install innosetup
+      - name: Compile Installer
+        run: iscc install/script_inno.iss
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trebuchet-Installer
+          path: install/Instalador_Trebuchet_Full.exe

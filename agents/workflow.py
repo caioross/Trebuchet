@@ -8,35 +8,27 @@ class TrebuchetOrchestrator:
 
     def build(self):
         workflow = StateGraph(AgentState)
-        
+    
         workflow.add_node("classifier", self.nodes.classifier)
+        workflow.add_node("orchestrator", self.nodes.orchestrator)
+        workflow.add_node("tool_executor", self.nodes.tool_executor) 
         workflow.add_node("chat_mode", self.nodes.pure_chat)
-        workflow.add_node("agent", self.nodes.unified_agent)
         
         workflow.set_entry_point("classifier")
         
-        def route_decision(state):
-            mode = state.get("current_mode", "task")
-            if "chat" in mode:
-                return "chat_mode"
-            return "agent"
-
         workflow.add_conditional_edges(
             "classifier",
-            route_decision,
-            {
-                "chat_mode": "chat_mode",
-                "agent": "agent"
-            }
+            lambda x: "chat_mode" if x["current_mode"] == "chat" else "orchestrator",
+            {"chat_mode": "chat_mode", "orchestrator": "orchestrator"}
+        )
+        
+        workflow.add_edge("orchestrator", "tool_executor")
+        
+        workflow.add_conditional_edges(
+            "tool_executor",
+            lambda x: END if x["status"] == "finished" else "orchestrator",
+            {END: END, "orchestrator": "orchestrator"}
         )
         
         workflow.add_edge("chat_mode", END)
-        
-        def worker_router(state):
-            if state.get("status") == "finished":
-                return END
-            return "agent"
-
-        workflow.add_conditional_edges("agent", worker_router)
-        
         return workflow.compile()

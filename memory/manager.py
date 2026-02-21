@@ -205,7 +205,6 @@ class MemoryManager:
                     {"domain": {"$eq": "system"}}
                 ]
             }
-\
         docs = self.vector_store.search(query, k=k, filters=filters)
         
         if not docs:
@@ -268,7 +267,7 @@ class MemoryManager:
                             file_hash = hashlib.md5(content.encode()).hexdigest()
                             if file_hash in self.ingested_hashes: continue
                             
-                            print(f"   👁️ [AUTO-LEITURA] Aprendendo: {folder}/{f}")
+                            print(f"[AUTO-LEITURA] Aprendendo: {folder}/{f}")
                             self.ingest_universal(
                                 content, 
                                 "system_source_code", 

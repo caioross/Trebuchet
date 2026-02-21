@@ -21,3 +21,5 @@ class AgentState(TypedDict):
     pending_approval: Optional[str]
     last_error: Optional[str]
     failed_task: Optional[str]
+    
+    next_action: Optional[Dict]

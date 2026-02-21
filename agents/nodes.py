@@ -36,18 +36,50 @@ class TrebuchetNodes:
             "completed_log": [f"️CHAT: {response}"]
         }
     
+    async def orchestrator(self, state: AgentState) -> Dict:
+        response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
+        
+        try:
+            data = json.loads(re.search(r'\{.*\}', response, re.DOTALL).group(0))
+            return {
+                "current_thought": data.get("thought", "Pensando..."),
+                "next_action": data,
+                "status": "building"
+            }
+        except:
+            return {"status": "error_recovery", "current_thought": "Erro ao processar pensamento."}
+        
     async def classifier(self, state: AgentState) -> Dict:
         last_msg = state.get("objective", "")
+        prompt = f"Analise a intenção: '{last_msg}'. Responda em JSON: {{\"thought\": \"sua análise\", \"mode\": \"chat\" ou \"task\"}}"
         
-        prompt = f"""
-        CLASSIFIQUE A INTENÇÃO: "{last_msg}"
-        RESPONDER APENAS: "chat" (conversa) ou "task" (executar algo).
-        """
-
-        decision = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.0)
-        cleaned = decision.strip().lower().replace(".", "")
-        return {"current_mode": "chat" if "chat" in cleaned else "task"}
+        response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.0)
+        try:
+            data = json.loads(re.search(r'\{.*\}', response, re.DOTALL).group(0))
+            return {
+                "current_mode": data.get("mode", "task"),
+                "current_thought": data.get("thought", "Classificando intenção...")
+            }
+        except:
+            return {"current_mode": "task", "current_thought": "Analisando complexidade da tarefa..."}
     
+    async def tool_executor(self, state: AgentState) -> Dict:
+        action = state.get("next_action", {})
+        tool_name = action.get("tool_name")
+        args = action.get("args", {})
+
+        if tool_name in ["finish", "answer_user"]:
+            return {"status": "finished", "final_response": args.get("message", "Tarefa concluída.")}
+
+        result = self.tools.execute(tool_name, args)
+        output = str(result.get("output", ""))[:500]
+        
+        return {
+            "completed_log": [f"AÇÃO: {tool_name} | Saída: {output}"],
+            "last_tool_output": output,
+            "next_action": None
+        }
+
     async def unified_agent(self, state: AgentState) -> Dict:
         print("\n[AGENTE] Raciocinando...")
         

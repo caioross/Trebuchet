@@ -139,8 +139,9 @@ async def main_page():
             
             .log-font {{
                 font-family: 'JetBrains Mono', monospace;
-                font-size: 11px;
-                line-height: 1.4;
+                font-size: 12px;
+                line-height: 1.5;
+                word-break: break-word;
             }}
 
             .msg-bubble-user {{
@@ -522,20 +523,18 @@ async def main_page():
                                         ui.button(icon='settings', on_click=lambda n=name, t=tool: open_tool_settings(n, t)).props('flat dense size=xs color=zinc-600').tooltip('Configurações')
                                     
                                     ui.switch().bind_value(tool_conf, 'enabled').props('dense color=indigo size=xs')
-                       
+                ui.separator().classes('bg-zinc-800')       
 
-                with ui.column().classes('w-full flex-grow min-h-[250px] flex flex-col'):
+                with ui.column().classes('w-full h-1/3 flex-none flex flex-col bg-[#050505]/40 p-4'):
                     with ui.row().classes('w-full items-center justify-between mb-2'):
                         ui.label('LOGS DO SISTEMA').classes('text-[10px] font-bold text-zinc-500 tracking-widest')
                         with ui.row().classes('gap-1'):
-                            ui.button(icon='download').props('flat round size=xs color=zinc-600').tooltip('Exportar Logs')
-                            ui.button(icon='delete_sweep', on_click=lambda: log_container.clear()).props('flat round size=xs color=zinc-600').tooltip('Limpar')
+                            ui.button(icon='download').props('flat round size=xs color=zinc-600')
+                            ui.button(icon='delete_sweep', on_click=lambda: log_container.clear()).props('flat round size=xs color=zinc-600')
                     
-                    log_scroll = ui.scroll_area().classes('w-full h-full bg-[#050505] border border-zinc-800 rounded-md p-3 shadow-inner custom-scroll')
+                    log_scroll = ui.scroll_area().classes('w-full flex-grow bg-black/20 border border-zinc-800/50 rounded p-2 custom-scroll')
                     with log_scroll:
-                        log_container = ui.column().classes('w-full gap-1')
-                        ui.label('> System initialized.').classes('log-font text-emerald-500/80')
-                        ui.label('> Waiting for user input...').classes('log-font text-zinc-600')
+                        log_container = ui.column().classes('w-full gap-0.5')
 
     bridge_input = ui.input().props('id=data-bridge').classes('hidden').on('update:model-value', handle_bridge)
 
@@ -639,8 +638,8 @@ async def main_page():
                         
                         if "completed_log" in updates and updates["completed_log"]:
                             log_msg = updates["completed_log"][-1]
-                            log_type = 'error' if 'erro' in log_msg.lower() else 'success' if 'sucesso' in log_msg.lower() else 'info'
-                            system_log(f"[{node}] {log_msg}", log_type)
+                            if "RESPOSTA:" in log_msg:
+                                response_text.content = log_msg.split("RESPOSTA:")[1].strip()
                         
                         if "current_thought" in updates:
                             system_log(f"Thought: {updates['current_thought'][:50]}...", "warning")
@@ -664,7 +663,7 @@ async def main_page():
                             if 'spinner' in locals(): 
                                 spinner.set_visibility(False)
 
-                            thought_text.content = f"**[{node.upper()}]**: {thought}"
+                            thought_display.content = f"**[{node.upper()}]**: {thought}"
                             thought_expander.value = True
                             
                         if "final_response" in updates:

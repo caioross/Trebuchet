@@ -37,6 +37,32 @@ class TrebuchetNodes:
         }
     
     async def orchestrator(self, state: AgentState) -> Dict:
+        objective = state.get("objective")
+        history = state.get("completed_log", [])
+        agent_config = state.get("agent_config", {}).get("tools", {})
+        history_str = "\n".join(history[-8:]) if history else "Início da tarefa."
+        tools_list = self.tools.get_prompt_list(active_tools=agent_config)
+        
+        prompt = f"""
+        OBJETIVO: "{objective}"
+        HISTÓRICO RECENTE:
+        {history_str}
+
+        FERRAMENTAS DISPONÍVEIS: 
+        {tools_list}
+        
+        RESPONDA ESTRITAMENTE EM JSON neste formato:
+        {{
+            "thought": "Seu raciocínio passo a passo aqui",
+            "tool_name": "nome_da_tool",
+            "args": {{ "arg1": "valor" }}
+        }}
+        
+        Para finalizar, use tool_name: "finish".
+        Para responder ao usuário sem finalizar, use tool_name: "answer_user".
+        """
+
+
         response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
         
         try:

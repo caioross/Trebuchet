@@ -74,11 +74,12 @@ class ToolRegistry:
                 except Exception as e:
                     print(f"[TOOLS] Falha ao carregar plugin {filename}: {str(e)}")
 
-    def get_prompt_list(self) -> str:
+    def get_prompt_list(self, active_tools=None) -> str:
         prompt = "FERRAMENTAS DISPONÍVEIS:\n"
         for name, tool in self.tools.items():
-            schema_dump = json.dumps(tool.parameters, ensure_ascii=False)
-            prompt += f"- {name}: {tool.description}\n  Parameters: {schema_dump}\n"
+            if active_tools and name not in active_tools:
+                continue
+            prompt += f"- {name}: {tool.description} (Args: {tool.parameters})\n"
         return prompt
 
     def _validate_args(self, tool: BaseTool, args: Dict[str, Any]) -> List[str]:

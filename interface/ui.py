@@ -233,7 +233,7 @@ async def main_page():
         "attachments": [],
         "config": {
             "tools": {},
-            "model": "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF",
+            "model": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
             "temperature": 0.7,
             "max_steps": 10
         }
@@ -743,7 +743,6 @@ async def main_page():
                 system_log(msg, type=ltype)
         except Exception:
             pass
-    ui.timer(0.2, process_sys_queue)
             
             
 def run_ui():

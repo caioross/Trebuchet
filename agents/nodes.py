@@ -84,6 +84,27 @@ class TrebuchetNodes:
 
         response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
         
+        try:
+            import re
+            clean_res = response.replace("```json", "").replace("```", "").strip()
+            match = re.search(r'\{.*\}', clean_res, re.DOTALL)
+            
+            if match:
+                data = json.loads(match.group(0))
+            else:
+                raise ValueError("JSON não encontrado na resposta")
+
+            return {
+                "next_action": data,
+                "current_thought": data.get("thought", "Planejando próxima ação...")
+            }
+        except Exception as e:
+            return {
+                "next_action": {"tool_name": "answer_user", "args": {"message": response}},
+                "current_thought": f"Erro ao processar JSON: {str(e)}"
+            }
+        
+
     async def classifier(self, state: AgentState) -> Dict:
         last_msg = state.get("objective", "")
         prompt = f"Analise a intenção: '{last_msg}'. Responda em JSON: {{\"thought\": \"sua análise\", \"mode\": \"chat\" ou \"task\"}}"

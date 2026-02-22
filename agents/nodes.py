@@ -24,7 +24,11 @@ class TrebuchetNodes:
             formatted_history.append({"role": msg["role"], "content": msg["content"]})
         
         sys_prompt = f"""Você é o TREBUCHET v4.0. 
-        Use o contexto abaixo se for relevante para a pergunta.
+        DIRETRIZES DE PERSONALIDADE:
+        - Seja direto e técnico. Evite redundâncias.
+        - Use o contexto de memória abaixo para manter a continuidade histórica.
+        - Use o contexto abaixo se for relevante para a pergunta.
+        
         CONTEXTO DE MEMÓRIA:
         {memory_context}
         """
@@ -55,27 +59,28 @@ class TrebuchetNodes:
         tools_list = self.tools.get_prompt_list(active_tools=agent_config)
         
         prompt = f"""
-        OBJETIVO ATUAL: "{objective}"
-        
-        CONTEXTO RECUPERADO (RAG):
-        {memory_context}
-        
-        HISTÓRICO DA CONVERSA:
-        {history_str}
-        
-        LOG DE EXECUÇÃO ATUAL:
-        {log_str}
+            OBJETIVO: "{objective}"
+            CONTEXTO DE MEMÓRIA (RAG): {memory_context}
+            LOG DE EXECUÇÃO (HISTÓRICO): {history_str}
+            LOG INTERNO: {log_str}
 
-        FERRAMENTAS: 
-        {tools_list}
-        
-        RESPONDA APENAS JSON:
-        {{
-            "thought": "raciocínio",
-            "tool_name": "tool ou 'finish' ou 'answer_user'",
-            "args": {{ "arg": "val" }}
-        }}
-        """
+            REGRAS DE RACIOCÍNIO PARA AUTONOMIA:
+            1. **PENSAMENTO CRÍTICO**: Analise o último resultado no log. Se foi um erro, o seu "thought" deve focar na resolução desse erro específico.
+            2. **PLANEAMENTO**: Se estiver no início, liste os passos. Se estiver no meio, valide se o passo anterior aproxima do objetivo.
+            3. **SELEÇÃO DE FERRAMENTA**: Escolha a ferramenta mais eficiente para o próximo passo.
+            - Use `shell` para verificar o estado do sistema antes de agir.
+            - Use `answer_user` apenas se precisar de dados que não pode obter sozinho.
+            4. **LOOPING E SEGURANÇA**: Se detectar que está a repetir a mesma ação sem sucesso, mude a estratégia.
+
+            FERRAMENTAS DISPONÍVEIS: {tools_list}
+
+            RESPOSTA OBRIGATÓRIA EM JSON:
+            {{
+                "thought": "Passo 1: Analisar X. Passo 2: Executar Y porque Z. Se falhar, tentarei W.",
+                "tool_name": "nome_da_tool",
+                "args": {{ "arg_name": "valor" }}
+            }}
+            """
 
         response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
         

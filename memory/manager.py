@@ -197,7 +197,7 @@ class MemoryManager:
                 self.vector_store.add(chunk, chunk_meta, chunk_meta["ingest_id"])
 
     def retrieve(self, query: str, k: int = 5, thread_id: Optional[str] = None) -> str:
-        filters = {}
+        filters = None
         if thread_id:
             filters = {
                 "$or": [

@@ -11,6 +11,8 @@ import logging
 import queue
 from datetime import datetime
 from tools.registry import ToolRegistry
+from memory.manager import MemoryManager
+
 sys_log_queue = queue.Queue()
 
 class StreamRedirector:
@@ -459,8 +461,8 @@ async def main_page():
                     ui.button(icon='star_border').props('flat round size=sm color=zinc-400')
                     ui.separator().props('vertical spaced').classes('bg-zinc-700')
                     status_badge = ui.badge('IDLE', color='zinc-800', text_color='zinc-500').props('rounded')
-
-            chat_scroll = ui.scroll_area().classes('w-full flex-grow p-6 md:p-12 pb-40 custom-scroll')
+            
+            chat_scroll = ui.scroll_area().classes('w-full flex-grow p-6 md:p-12 custom-scroll')
             with chat_scroll:
                 with ui.column().classes('w-full max-w-3xl mx-auto gap-8'):
                     with ui.column().classes('w-full items-center justify-center py-10 gap-4 opacity-50'):
@@ -470,9 +472,8 @@ async def main_page():
                     
                     messages_container = ui.column().classes('w-full gap-6')
 
-            with ui.column().classes('absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#09090b] via-[#09090b] to-transparent pointer-events-none z-20'):
-                with ui.column().classes('w-full max-w-3xl mx-auto bg-[#18181b] border border-zinc-700 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/5 pointer-events-auto'):
-                   
+            with ui.column().classes('w-full p-4 md:p-6 bg-[#09090b] shrink-0 z-20 border-t border-zinc-800/50'):
+                with ui.column().classes('w-full max-w-3xl mx-auto bg-[#18181b] border border-zinc-700 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/5'):        
                     with ui.row().classes('w-full px-4 pt-2 gap-2 min-h-[0px]') as attachments_container:
                         pass
                     
@@ -607,6 +608,7 @@ async def main_page():
                         spinner = ui.spinner('dots', size='2rem', color='indigo-500')
                         response_text = ui.markdown().classes('prose prose-invert max-w-none text-sm leading-relaxed text-zinc-300')
 
+        await asyncio.sleep(0.1) 
         chat_scroll.scroll_to(percent=1.0)
         
         try:
@@ -691,8 +693,26 @@ async def main_page():
             if final_answer:
                 session["history"].append({"role": "user", "content": text})
                 session["history"].append({"role": "assistant", "content": final_answer})
+                
                 save_current_chat()
-                system_log("Resposta gerada com sucesso.", "success")
+                
+                memory = MemoryManager.get_instance()
+                
+                memory.ingest_universal(
+                    content=text, 
+                    source_type="chat_interaction", 
+                    metadata={"role": "user", "chat_id": current_chat_id},
+                    thread_id=current_chat_id
+                )
+                
+                memory.ingest_universal(
+                    content=final_answer, 
+                    source_type="chat_interaction", 
+                    metadata={"role": "assistant", "chat_id": current_chat_id},
+                    thread_id=current_chat_id
+                )
+
+                system_log("Resposta gerada e indexada na memória.", "success")
 
         except RuntimeError:
             pass

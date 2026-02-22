@@ -14,3 +14,4 @@ from tools.libs.notion import NotionTool
 from tools.libs.speak import SpeakTool
 from tools.libs.video import HunyuanVideoTool
 from tools.libs.vision import VisionTool
+from tools.libs.log_reader import LogReaderTool

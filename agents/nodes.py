@@ -22,8 +22,9 @@ class TrebuchetNodes:
         formatted_history = []
         for msg in chat_history[-10:]:
             formatted_history.append({"role": msg["role"], "content": msg["content"]})
-        
+        now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         sys_prompt = f"""Você é o TREBUCHET v4.0. 
+        DATA/HORA ATUAL: {now}
         DIRETRIZES DE PERSONALIDADE:
         - Seja direto e técnico. Evite redundâncias.
         - Use o contexto de memória abaixo para manter a continuidade histórica.
@@ -67,7 +68,7 @@ class TrebuchetNodes:
         memory_context = self.memory.retrieve(objective, k=3)
         
         history_str = ""
-        for msg in chat_history[-6:]:
+        for msg in chat_history[-10:]:
             history_str += f"{msg['role'].upper()}: {msg['content']}\n"
         
         log_str = "\n".join(internal_log[-5:]) if internal_log else "Nenhuma ação tomada ainda."
@@ -88,10 +89,9 @@ class TrebuchetNodes:
             1. **PENSAMENTO CRÍTICO**: Analise o último resultado no log. Se foi um erro, o seu "thought" deve focar na resolução desse erro específico.
             2. **PLANEAMENTO**: Se estiver no início, liste os passos. Se estiver no meio, valide se o passo anterior aproxima do objetivo.
             3. **SELEÇÃO DE FERRAMENTA**: Escolha a ferramenta mais eficiente para o próximo passo.
-            - Use `shell` para verificar o estado do sistema antes de agir.
-            - Use `answer_user` apenas se precisar de dados que não pode obter sozinho.
             4. **AUTO-CORREÇÃO (SELF-HEALING)**: Se uma ferramenta falhar por problemas de código, sintaxe ou de importação, use a ferramenta `tool_editor` com a ação `read` para ler o código problemático em `tools/libs/`, e depois use a ação `write` para aplicar a correção estrutural na ferramenta.
             5. **LOOPING E SEGURANÇA**: Se detectar que está a repetir a mesma ação sem sucesso, mude a estratégia.
+            6. **MEMÓRIA HISTÓRICA**: Se o usuário perguntar sobre pedidos passados ou se você precisar revisar o que já tentou, use a ferramenta `log_reader` para consultar os logs de execução e conversas anteriores. Não confie apenas no contexto imediato.
 
             FERRAMENTAS DISPONÍVEIS: {tools_list}
 
@@ -142,7 +142,7 @@ class TrebuchetNodes:
 
     async def classifier(self, state: AgentState) -> Dict:
         last_msg = state.get("objective", "")
-        prompt = f"Analise a intenção: '{last_msg}'. Responda em JSON: {{\"thought\": \"sua análise\", \"mode\": \"chat\" ou \"task\"}}"
+        prompt = f"Analise se o usuário quer uma conversa casual ou uma execução técnica. No 'thought', responda apenas os critérios técnicos da decisão: '{last_msg}'. Responda em JSON: {{\"thought\": \"sua análise\", \"mode\": \"chat\" ou \"task\"}}"
         
         response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.0)
         try:

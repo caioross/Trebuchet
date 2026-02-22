@@ -9,8 +9,9 @@ class TrebuchetOrchestrator:
     def build(self):
         workflow = StateGraph(AgentState)
     
-        workflow.add_node("classifier", self.nodes.classifier)
+        workflow.set_entry_point("classifier")
         workflow.add_node("orchestrator", self.nodes.orchestrator)
+        
         workflow.add_node("tool_executor", self.nodes.tool_executor) 
         workflow.add_node("critic", self.nodes.critic)
         workflow.add_node("chat_mode", self.nodes.pure_chat)

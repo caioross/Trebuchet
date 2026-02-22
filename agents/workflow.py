@@ -19,7 +19,7 @@ class TrebuchetOrchestrator:
         
         workflow.add_conditional_edges(
             "classifier",
-            lambda x: "chat_mode" if x["current_mode"] == "chat" else "orchestrator",
+            lambda x: "chat_mode" if x.get("current_mode") == "chat" else "orchestrator",
             {"chat_mode": "chat_mode", "orchestrator": "orchestrator"}
         )
         
@@ -30,11 +30,6 @@ class TrebuchetOrchestrator:
             {END: END, "critic": "critic"}
         )
         workflow.add_edge("critic", "orchestrator")
-        workflow.add_conditional_edges(
-            "tool_executor",
-            lambda x: END if x["status"] == "finished" else "orchestrator",
-            {END: END, "orchestrator": "orchestrator"}
-        )
         
         workflow.add_edge("chat_mode", END)
         return workflow.compile()

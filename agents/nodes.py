@@ -119,6 +119,60 @@ class TrebuchetNodes:
         except:
             return {"current_mode": "task", "current_thought": "Analisando complexidade da tarefa..."}
     
+    async def critic(self, state: AgentState) -> Dict:
+        objective = state.get("objective")
+        last_output = state.get("last_tool_output", "")
+        error_counter = state.get("error_counter", 0)
+        if not last_output:
+            return {"status": "building"}
+
+        prompt = f"""
+        OBJETIVO ORIGINAL: "{objective}"
+        ÚLTIMO RESULTADO DA FERRAMENTA:
+        {last_output}
+
+        Verifique o resultado acima. A ferramenta completou a ação com sucesso ou encontrou um erro (ex: erro de sintaxe, permissão, arquivo não encontrado, comando inválido)?
+        Responda ESTRITAMENTE em JSON:
+        {{
+            "is_error": true ou false,
+            "feedback": "O que deu errado e como o orquestrador deve corrigir na próxima iteração. Se deu certo, apenas confirme."
+        }}
+        """
+
+        response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
+
+        try:
+            clean_res = response.replace("```json", "").replace("```", "").strip()
+            match = re.search(r'\{.*\}', clean_res, re.DOTALL)
+            if match:
+                data = json.loads(match.group(0))
+            else:
+                raise ValueError("JSON não encontrado")
+        except Exception as e:
+            data = {
+                "is_error": "error" in last_output.lower() or "exception" in last_output.lower(),
+                "feedback": f"Falha ao interpretar crítica. Analisando heuristicamente. Erro: {str(e)}"
+            }
+
+        is_error = data.get("is_error", False)
+        new_status = "error_recovery" if is_error else "building"
+        
+        new_error_counter = error_counter + 1 if is_error else 0
+
+        if new_error_counter >= 5:
+            return {
+                "status": "finished",
+                "final_response": "Desculpe, tentei várias vezes mas encontrei erros consecutivos. Preciso de intervenção humana ou ajuste nas ferramentas.",
+                "completed_log": ["CRÍTICA: Limite de erros atingido. Abortando."]
+            }
+
+        return {
+            "status": new_status,
+            "current_thought": data.get("feedback", "Avaliando..."),
+            "completed_log": [f"CRÍTICA: {data.get('feedback')}"],
+            "error_counter": new_error_counter
+        }
+
     async def tool_executor(self, state: AgentState) -> Dict:
         action = state.get("next_action", {})
         tool_name = action.get("tool_name")

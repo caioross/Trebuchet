@@ -12,6 +12,7 @@ class TrebuchetOrchestrator:
         workflow.add_node("classifier", self.nodes.classifier)
         workflow.add_node("orchestrator", self.nodes.orchestrator)
         workflow.add_node("tool_executor", self.nodes.tool_executor) 
+        workflow.add_node("critic", self.nodes.critic)
         workflow.add_node("chat_mode", self.nodes.pure_chat)
         
         workflow.set_entry_point("classifier")
@@ -23,7 +24,12 @@ class TrebuchetOrchestrator:
         )
         
         workflow.add_edge("orchestrator", "tool_executor")
-        
+        workflow.add_conditional_edges(
+            "tool_executor",
+            lambda x: END if x.get("status") == "finished" else "critic",
+            {END: END, "critic": "critic"}
+        )
+        workflow.add_edge("critic", "orchestrator")
         workflow.add_conditional_edges(
             "tool_executor",
             lambda x: END if x["status"] == "finished" else "orchestrator",

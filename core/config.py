@@ -19,8 +19,8 @@ class Config:
     
     #MAIN_REPO = "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF"
     #MAIN_FILE = "Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"
-    MAIN_REPO = "Qwen/Qwen2.5-3B-Instruct-GGUF"
-    MAIN_FILE = "qwen2.5-3b-instruct-q4_k_m.gguf"
+    MAIN_REPO = "Qwen/Qwen2.5-7B-Instruct-GGUF"
+    MAIN_FILE = "qwen2.5-7b-instruct-q4_k_m.gguf"
     FAST_REPO = "Qwen/Qwen2.5-3B-Instruct-GGUF"
     FAST_FILE = "qwen2.5-3b-instruct-q4_k_m.gguf"
     

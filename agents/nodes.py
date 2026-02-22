@@ -49,6 +49,21 @@ class TrebuchetNodes:
         internal_log = state.get("completed_log", [])
         agent_config = state.get("agent_config", {}).get("tools", {})
         
+        task_queue = state.get("micro_task_queue", [])
+        error_counter = state.get("error_counter", 0)
+
+        if error_counter >= 5:
+            return {
+                "next_action": {
+                    "tool_name": "answer_user",
+                    "args": {"message": "Travei após 5 tentativas falhas consecutivas. Por favor, verifique os logs, ajuste meu código usando o tool_editor ou me dê uma nova diretriz."}
+                },
+                "current_thought": "Limite de erros atingido. Abortando execução autônoma e pedindo ajuda.",
+                "error_counter": 0,
+                "status": "building"
+            }
+        
+
         memory_context = self.memory.retrieve(objective, k=3)
         
         history_str = ""
@@ -58,11 +73,16 @@ class TrebuchetNodes:
         log_str = "\n".join(internal_log[-5:]) if internal_log else "Nenhuma ação tomada ainda."
         tools_list = self.tools.get_prompt_list(active_tools=agent_config)
         
+        tasks_str = "\n".join([f"- {t}" for t in task_queue]) if task_queue else "Fila vazia. É necessário criar um plano de ação."
+                
         prompt = f"""
             OBJETIVO: "{objective}"
             CONTEXTO DE MEMÓRIA (RAG): {memory_context}
             LOG DE EXECUÇÃO (HISTÓRICO): {history_str}
             LOG INTERNO: {log_str}
+            
+            FILA DE MICRO-TAREFAS ATUAL:
+            {tasks_str}
 
             REGRAS DE RACIOCÍNIO PARA AUTONOMIA:
             1. **PENSAMENTO CRÍTICO**: Analise o último resultado no log. Se foi um erro, o seu "thought" deve focar na resolução desse erro específico.
@@ -95,14 +115,28 @@ class TrebuchetNodes:
             else:
                 raise ValueError("JSON não encontrado na resposta")
 
+            new_tasks = data.get("micro_tasks", task_queue)
+            tool = data.get("tool_name")
+            
+            if tool == "finish" and len(new_tasks) > 0:
+                tool = "answer_user"
+                data["args"] = {"message": "Ainda tenho tarefas na fila, mas tentei finalizar. Reavaliando..."}
+
             return {
-                "next_action": data,
-                "current_thought": data.get("thought", "Planejando próxima ação...")
+                "next_action": {
+                    "tool_name": tool,
+                    "args": data.get("args", {})
+                },
+                "current_thought": data.get("thought", "Planejando próxima ação..."),
+                "micro_task_queue": new_tasks,
+                "current_micro_task": new_tasks[0] if new_tasks else "Finalização"
             }
+            
         except Exception as e:
             return {
-                "next_action": {"tool_name": "answer_user", "args": {"message": response}},
-                "current_thought": f"Erro ao processar JSON: {str(e)}"
+                "next_action": {"tool_name": "answer_user", "args": {"message": f"Erro interno ao planejar a próxima ação: {response}"}},
+                "current_thought": f"Erro ao processar JSON: {str(e)}",
+                "error_counter": error_counter + 1
             }
         
 

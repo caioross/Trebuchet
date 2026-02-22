@@ -15,65 +15,69 @@ class TrebuchetNodes:
         self.tools = ToolRegistry()
 
     async def pure_chat(self, state: AgentState) -> Dict:
-        print("\n[CHAT] Conversando...")
-        
-        history = state.get("completed_log", [])
-        history_str = "\n".join(history[-5:])
         objective = state.get("objective")
+        chat_history = state.get("chat_history", [])
+        memory_context = self.memory.retrieve(objective, k=5)
         
-        prompt = f"""
-        VOCÊ É O TREBUCHET, um assistente inteligente.
-        CONTEXTO RECENTE: {history_str}
-        USUÁRIO: "{objective}"
-        Responda de forma útil e direta em Português.
+        formatted_history = []
+        for msg in chat_history[-10:]:
+            formatted_history.append({"role": msg["role"], "content": msg["content"]})
+        
+        sys_prompt = f"""Você é o TREBUCHET v4.0. 
+        Use o contexto abaixo se for relevante para a pergunta.
+        CONTEXTO DE MEMÓRIA:
+        {memory_context}
         """
-
-        response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.7)
+        
+        messages = [{"role": "system", "content": sys_prompt}] + formatted_history + [{"role": "user", "content": objective}]
+        
+        response = await self.llm.chat(messages=messages, temperature=0.7)
         
         return {
             "status": "finished",
             "final_response": response,
-            "completed_log": [f"️CHAT: {response}"]
+            "completed_log": [f"CHAT_RESPONSE: {response[:100]}..."]
         }
     
     async def orchestrator(self, state: AgentState) -> Dict:
         objective = state.get("objective")
-        history = state.get("completed_log", [])
+        chat_history = state.get("chat_history", [])
+        internal_log = state.get("completed_log", [])
         agent_config = state.get("agent_config", {}).get("tools", {})
-        history_str = "\n".join(history[-8:]) if history else "Início da tarefa."
+        
+        memory_context = self.memory.retrieve(objective, k=3)
+        
+        history_str = ""
+        for msg in chat_history[-6:]:
+            history_str += f"{msg['role'].upper()}: {msg['content']}\n"
+        
+        log_str = "\n".join(internal_log[-5:]) if internal_log else "Nenhuma ação tomada ainda."
         tools_list = self.tools.get_prompt_list(active_tools=agent_config)
         
         prompt = f"""
-        OBJETIVO: "{objective}"
-        HISTÓRICO RECENTE:
+        OBJETIVO ATUAL: "{objective}"
+        
+        CONTEXTO RECUPERADO (RAG):
+        {memory_context}
+        
+        HISTÓRICO DA CONVERSA:
         {history_str}
+        
+        LOG DE EXECUÇÃO ATUAL:
+        {log_str}
 
-        FERRAMENTAS DISPONÍVEIS: 
+        FERRAMENTAS: 
         {tools_list}
         
-        RESPONDA ESTRITAMENTE EM JSON neste formato:
+        RESPONDA APENAS JSON:
         {{
-            "thought": "Seu raciocínio passo a passo aqui",
-            "tool_name": "nome_da_tool",
-            "args": {{ "arg1": "valor" }}
+            "thought": "raciocínio",
+            "tool_name": "tool ou 'finish' ou 'answer_user'",
+            "args": {{ "arg": "val" }}
         }}
-        
-        Para finalizar, use tool_name: "finish".
-        Para responder ao usuário sem finalizar, use tool_name: "answer_user".
         """
 
-
         response = await self.llm.chat(messages=[{"role": "user", "content": prompt}], temperature=0.1)
-        
-        try:
-            data = json.loads(re.search(r'\{.*\}', response, re.DOTALL).group(0))
-            return {
-                "current_thought": data.get("thought", "Pensando..."),
-                "next_action": data,
-                "status": "building"
-            }
-        except:
-            return {"status": "error_recovery", "current_thought": "Erro ao processar pensamento."}
         
     async def classifier(self, state: AgentState) -> Dict:
         last_msg = state.get("objective", "")

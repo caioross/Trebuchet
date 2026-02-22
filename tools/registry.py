@@ -121,18 +121,19 @@ class ToolRegistry:
 
     def execute(self, tool_name: str, args: Dict) -> Dict:
         if tool_name not in self.tools:
-            return {"success": False, "output": f"Tool '{tool_name}' not found", "metadata": {"error": True}}
+            return {"success": False, "output": f"ERRO: Ferramenta '{tool_name}' não existe. Escolha uma da lista.", "metadata": {"error": True}}
         
         tool = self.tools[tool_name]
         
         validation_errors = self._validate_args(tool, args)
         if validation_errors:
-            error_msg = f"Validation Error in tool '{tool_name}': {'; '.join(validation_errors)}"
-            print(f"❌ [TOOLS] {error_msg}")
+            error_msg = f"ERRO DE ARGUMENTO em '{tool_name}': {'; '.join(validation_errors)}. Corrija os parâmetros no próximo pensamento."
             return {"success": False, "output": error_msg, "metadata": {"error": True, "validation_failed": True}}
 
         try:
-            return tool.run(**args)
+            result = tool.run(**args)
+            if not isinstance(result, dict) or "output" not in result:
+                return {"success": False, "output": "Erro interno: Resposta da ferramenta em formato inválido.", "metadata": {}}
+            return result
         except Exception as e:
-            return {"success": False, "output": f"Execution Error: {str(e)}", "metadata": {"error": True}}
-           
+            return {"success": False, "output": f"ERRO DE EXECUÇÃO em '{tool_name}': {str(e)}", "metadata": {"error": True}}

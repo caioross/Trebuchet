@@ -615,13 +615,22 @@ async def main_page():
             orch = TrebuchetOrchestrator()
             workflow = orch.build()
             agent_indicators = {}
+            
+            history_for_graph = []
+            for m in session["history"]:
+                history_for_graph.append({"role": m["role"], "content": m["content"]})
+
             initial_state = {
                 "objective": agent_context,
                 "status": "architecting",
-                "chat_history": session["history"],
+                "chat_history": history_for_graph,
                 "completed_log": [],
                 "current_mode": "task",
-                "agent_config": session["config"]
+                "agent_config": session["config"],
+                "micro_task_queue": [],
+                "current_micro_task": "",
+                "last_tool_output": "",
+                "error_counter": 0
             }
 
             system_log(f"Workflow iniciado: {session['config']['model']}", "info")

@@ -17,11 +17,8 @@ class Config:
         "tools_plugins": os.path.join(BASE_DIR, "tools", "plugins")
     }
     
-    #MAIN_REPO = "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF"
-    #MAIN_FILE = "Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"
-    MAIN_REPO = "Qwen/Qwen2.5-7B-Instruct-GGUF"
+    
     MAIN_FILE = "Phi-3.5-mini-Instruct-Q4_K_M.gguf"
-    FAST_REPO = "Qwen/Qwen2.5-3B-Instruct-GGUF"
     FAST_FILE = "qwen2.5-3b-instruct-q4_k_m.gguf"
     
     VISION_MODEL_FILE = "ggml-model-q4_k.gguf" 
@@ -37,11 +34,6 @@ class Config:
     STREAMING_ENABLED = True
     
     CONTEXT_SIZE = 8096
-
-    NOTION_TOKEN = ""
-    GOOGLE_CLIENT_ID = ""
-    GOOGLE_CLIENT_SECRET = "" 
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 
     DRY_RUN = False 
     KILL_SWITCH = False

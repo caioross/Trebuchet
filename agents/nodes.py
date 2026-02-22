@@ -70,7 +70,8 @@ class TrebuchetNodes:
             3. **SELEÇÃO DE FERRAMENTA**: Escolha a ferramenta mais eficiente para o próximo passo.
             - Use `shell` para verificar o estado do sistema antes de agir.
             - Use `answer_user` apenas se precisar de dados que não pode obter sozinho.
-            4. **LOOPING E SEGURANÇA**: Se detectar que está a repetir a mesma ação sem sucesso, mude a estratégia.
+            4. **AUTO-CORREÇÃO (SELF-HEALING)**: Se uma ferramenta falhar por problemas de código, sintaxe ou de importação, use a ferramenta `tool_editor` com a ação `read` para ler o código problemático em `tools/libs/`, e depois use a ação `write` para aplicar a correção estrutural na ferramenta.
+            5. **LOOPING E SEGURANÇA**: Se detectar que está a repetir a mesma ação sem sucesso, mude a estratégia.
 
             FERRAMENTAS DISPONÍVEIS: {tools_list}
 

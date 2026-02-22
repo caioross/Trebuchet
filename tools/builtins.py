@@ -2,3 +2,15 @@ from tools.libs.search import SearchTool
 from tools.libs.shell import ShellTool
 from tools.libs.desktop import DesktopTool
 from tools.libs.editor import ToolEditorTool
+from tools.libs.audio import HearingTool
+from tools.libs.github import GitHubTool
+from tools.libs.google_calendar import GoogleCalendarTool
+from tools.libs.google_docs import GoogleDocsTool
+from tools.libs.google_gmail import GmailTool
+from tools.libs.google_sheets import GoogleSheetsTool
+from tools.libs.google_tasks import GoogleTasksTool
+from tools.libs.music import MusicTool
+from tools.libs.notion import NotionTool
+from tools.libs.speak import SpeakTool
+from tools.libs.video import HunyuanVideoTool
+from tools.libs.vision import VisionTool

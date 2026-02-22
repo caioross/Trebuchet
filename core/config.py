@@ -17,8 +17,10 @@ class Config:
         "tools_plugins": os.path.join(BASE_DIR, "tools", "plugins")
     }
     
-    MAIN_REPO = "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF"
-    MAIN_FILE = "Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"
+    #MAIN_REPO = "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF"
+    #MAIN_FILE = "Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"
+    MAIN_REPO = "Qwen/Qwen2.5-7B-Instruct-GGUF"
+    MAIN_FILE = "qwen2.5-7b-q4_k_m-imat"
     FAST_REPO = "Qwen/Qwen2.5-3B-Instruct-GGUF"
     FAST_FILE = "qwen2.5-3b-instruct-q4_k_m.gguf"
     
@@ -34,7 +36,7 @@ class Config:
     
     STREAMING_ENABLED = True
     
-    CONTEXT_SIZE = 16384
+    CONTEXT_SIZE = 8192
 
     NOTION_TOKEN = ""
     GOOGLE_CLIENT_ID = ""

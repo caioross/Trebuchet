@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from tools.base import BaseTool, ToolResult
 import json
 

@@ -38,7 +38,14 @@ class LLMEngine:
                 n_gpu_layers=-1,
                 verbose=False,
                 n_batch=512,
-                chat_format="chatml" 
+                chat_format="chatml" ,
+                flash_attn=True,
+                use_mmap=True,
+                n_threads=4,
+                seed=42,
+                f16_kv=True,
+                logits_all=True,
+                vocab_only=False
             )
         
         self.executor = ThreadPoolExecutor(max_workers=1)
@@ -55,7 +62,7 @@ class LLMEngine:
                 response = self.llm.create_chat_completion(
                     messages=messages,
                     temperature=temperature,
-                    max_tokens=2048
+                    max_tokens=4096
                 )
                 return response["choices"][0]["message"]["content"]
             except Exception as e:

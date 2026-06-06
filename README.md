@@ -13,7 +13,12 @@
 
 </div>
 
+🇧🇷 [**Português**](#-português) · 🇺🇸 [**English**](#-english)
+
 ---
+
+## 🇧🇷 Português
+<a name="-português"></a>
 
 ## Sobre o Projeto
 
@@ -180,7 +185,49 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir Issues ou Pull R
 4. Push para a Branch (`git push origin feature/Incrivel`).
 5. Abra um Pull Request.
 
+---
+
+## 🇺🇸 English
+<a name="-english"></a>
+
+### About
+
+**Trebuchet Framework v4.0** is a robust infrastructure for building, running and orchestrating **autonomous AI agents**, designed specifically for **local hardware**. Unlike solutions that depend exclusively on cloud APIs, Trebuchet prioritizes privacy and local performance using `llama-cpp-python` for LLM inference and `chromadb` for persistent memory. v4.0 introduces a **graph-based architecture (LangGraph)** enabling complex workflows, dynamic switching between "Chat" and "Agent" modes, and a fully modular tool system.
+
+### Highlights
+
+- **Local intelligence first** — runs GGUF models (Llama, Mistral, Gemma) on CPU or GPU (CUDA).
+- **Graph-based workflow** — state/decision logic managed by LangGraph: reasoning loops, error recovery, complex planning.
+- **Natively multi-modal** — Vision (OpenCV), Hearing (Faster-Whisper) and Speech (TTS).
+- **Desktop control** — native OS tools (shell, UI automation via PyAutoGUI).
+- **Plugin architecture** — drop a `.py` subclass of `BaseTool` into the plugins folder; the `ToolRegistry` auto-discovers and injects it into the LLM context. No core changes.
+
+### Install & run
+
+```bash
+git clone https://github.com/caioross/trebuchet.git
+cd trebuchet
+python -m venv venv && .\venv\Scripts\activate   # Linux/Mac: source venv/bin/activate
+
+# GPU NVIDIA (recommended): build llama-cpp with cuBLAS first
+$env:CMAKE_ARGS="-DLLAMA_CUBLAS=on"
+pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir
+pip install -r requirements.txt   # CPU-only: just this line
+
+python main.py   # launches the NiceGUI web interface
+```
+
+A C++ compiler is required (VS Build Tools on Windows, `build-essential` on Linux). The full architecture, the StateGraph diagram, the plugin example and the file-tree reference are documented in detail in the Portuguese section above.
+
+### Stack
+
+Python 3.10+ · llama-cpp-python · LangGraph + LangChain · ChromaDB + sentence-transformers (RAG) · FastAPI + uvicorn · NiceGUI · faster-whisper · OpenCV · PyAutoGUI · Docker. See `requirements.txt`.
+
+---
+
 <div align="center">
 Desenvolvido com ❤️ e Python.
 Arquitetado para Hardware Local.
+
+*Parte do ecossistema de projetos de **Caio**.*
 </div>
